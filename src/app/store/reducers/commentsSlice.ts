@@ -1,5 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+export const getNewCommentsData = async () => {
+  const result = await fetch("https://jsonplaceholder.typicode.com/comments");
+  return result;
+};
+
 export const commentSlice = createSlice({
   name: "Comment Slice",
   initialState: {
