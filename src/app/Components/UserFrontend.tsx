@@ -8,17 +8,14 @@ const UserFrontend: React.FC<Props> = () => {
   const [age, setAge] = useState<number>(0);
 
   const [user, setUser] = useState<any>(null);
-  useEffect(() => {
-    const getUsers = async () => {
-      const response = await fetch("http://localhost:7000/api/user");
-      const json = await response.json();
-      if (json) {
-        setUser(json.data.result);
-        return json;
-      }
-    };
-    getUsers();
-  }, []);
+  const getUsers = async () => {
+    const response = await fetch("http://localhost:7000/api/user");
+    const json = await response.json();
+    if (json) {
+      setUser(json.data.result);
+      return json;
+    }
+  };
 
   const addNewUser = async () => {
     const user = {
@@ -28,50 +25,122 @@ const UserFrontend: React.FC<Props> = () => {
     };
     const response = await fetch("http://localhost:7000/api/user", {
       method: "POST",
-      body: JSON.parse(JSON.stringify(user)),
+      body: JSON.stringify(user),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     const json = await response.json();
     if (json) {
-      setUser(json.data.result);
+      getUsers();
       return json;
     }
   };
 
+  const updateUser = async (oldUser: any) => {
+    const user = JSON.parse(JSON.stringify(oldUser));
+    user.firstName =
+      user.firstName || "no-name" + Math.random().toFixed(2).toString();
+    user.lastName =
+      user.lastName || "no-name" + Math.random().toFixed(2).toString();
+    const response = await fetch(
+      `http://localhost:7000/api/user/${oldUser._id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(user),
+        headers: {
+          "content-type": "application/json",
+        },
+      }
+    );
+    const data = response.json();
+    getUsers();
+  };
+
+  const deleteUser = async (oldUser: any) => {
+    const user = JSON.parse(JSON.stringify(oldUser));
+    const response = await fetch(
+      `http://localhost:7000/api/user/${oldUser._id}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({}),
+        headers: {
+          "content-type": "application/json",
+        },
+      }
+    );
+    const data = response.json();
+    getUsers();
+  };
+
+  useEffect(() => {
+    getUsers();
+  }, []);
+
   return (
-    <div>
-      <h4>User Service</h4>
+    <div style={{ border: "1px dashed red" }}>
+      <h3>User Service</h3>
 
-      <h5>Add User</h5>
+      <h4>Add User Form</h4>
       <div>
-        <label>Enter First Name</label>
-        <input
-          type="text"
-          value={firstName}
-          onChange={(e: any) => setFirstName(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Enter Last Name</label>
-        <input
-          type="text"
-          value={lastName}
-          onChange={(e: any) => setLastName(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Enter Age</label>
-        <input
-          type="text"
-          value={age}
-          onChange={(e: any) => setAge(e.target.value)}
-        />
-      </div>
-      <div>
-        <button type="submit" onClick={addNewUser}>
-          ADD USER{" "}
-        </button>
+        <table>
+          <tr>
+            <td>
+              {" "}
+              <label>Enter First Name</label>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e: any) => setFirstName(e.target.value)}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              {" "}
+              <label>Enter Last Name</label>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e: any) => setLastName(e.target.value)}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              {" "}
+              <label>Enter Age</label>
+            </td>
+            <td>
+              {" "}
+              <input
+                type="text"
+                value={age}
+                onChange={(e: any) => setAge(e.target.value)}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              {" "}
+              <button type="submit" onClick={addNewUser}>
+                ADD USER{" "}
+              </button>
+            </td>
+          </tr>
+        </table>
       </div>
 
+      <br />
+      <br />
+      <h4>Displaying users</h4>
       <table>
         <tr>
           <th>Sr.</th>
@@ -79,6 +148,7 @@ const UserFrontend: React.FC<Props> = () => {
           <th>First Name</th>
           <th>Last Name</th>
           <th>Age</th>
+          <th>Action</th>
         </tr>
         {user &&
           user.length &&
@@ -90,6 +160,15 @@ const UserFrontend: React.FC<Props> = () => {
                 <td>{data.firstName}</td>
                 <td>{data.lastName}</td>
                 <td>{data.age}</td>
+                <td
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                  }}
+                >
+                  <button onClick={() => updateUser(data)}>Update</button>
+                  <button onClick={() => deleteUser(data)}>Delete</button>
+                </td>
               </tr>
             );
           })}
